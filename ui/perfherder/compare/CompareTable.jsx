@@ -1,12 +1,14 @@
 import React from 'react';
-import { Table } from 'reactstrap';
+import { Button, Table } from 'reactstrap';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faExclamationTriangle,
+  faRedo,
   faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons';
 
+import JobModel from '../../models/job';
 import SimpleTooltip from '../../shared/SimpleTooltip';
 import { displayNumber } from '../helpers';
 import ProgressBar from '../ProgressBar';
@@ -27,6 +29,17 @@ export default class CompareTable extends React.PureComponent {
     `Mean difference: ${displayNumber(delta)} (= ${Math.abs(
       displayNumber(percentage),
     )}% ${improvement ? 'better' : 'worse'})`;
+
+  retriggerJob = (originalJobIds, newJobIds) => {
+    console.log('originalJobIds', originalJobIds);
+    console.log('newJobIds', newJobIds);
+    const repoName = ''; // repoName is not used at all in retrigger. Should we send it anyway?
+    const notify = () => {}; // no notifications for now
+
+    // we have to be careful here, not to retrigger jobs from aggregate revisions from originalJobIds
+    const jobsToRetrigger = [originalJobIds[0], newJobIds[0]];
+    JobModel.retrigger(jobsToRetrigger, repoName, notify, 5);
+  };
 
   render() {
     const { data, testName } = this.props;
@@ -141,6 +154,15 @@ export default class CompareTable extends React.PureComponent {
                 ) : null}
               </td>
               <td className="text-right">
+                <Button
+                  className="retrigger-btn btn icon-green"
+                  title="Retrigger 5 times"
+                  onClick={() =>
+                    this.retriggerJob(results.originalJobIds, results.newJobIds)
+                  }
+                >
+                  <FontAwesomeIcon icon={faRedo} title="Retrigger 5 times" />
+                </Button>
                 {results.originalRuns && (
                   <SimpleTooltip
                     textClass="detail-hint"

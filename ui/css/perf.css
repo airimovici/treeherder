@@ -287,12 +287,22 @@ th {
   transition: color 150ms ease-in-out;
 }
 
+.compare-table .retrigger-btn {
+  margin-right: 5px;
+  visibility: hidden;
+  transition: visibility 150ms ease-in-out;
+}
+
 .compare-table tr:hover .result-links span {
   color: #333;
 }
 
 .compare-table tr:hover .result-links a {
   color: #23527c;
+}
+
+.compare-table tr:hover .retrigger-btn {
+  visibility: visible;
 }
 
 .sticky-footer {
