@@ -64,7 +64,7 @@ export default class CompareTable extends React.PureComponent {
   };
 
   render() {
-    const { data, testName, user } = this.props;
+    const { data, testName, user, hasSubtests } = this.props;
     return (
       <Table sz="small" className="compare-table mb-0 px-0" key={testName}>
         <thead>
@@ -80,7 +80,18 @@ export default class CompareTable extends React.PureComponent {
             {/* empty for progress bars (magnitude of difference) */}
             <th className="table-width-lg" />
             <th className="table-width-lg">Confidence</th>
-            <th className="text-right table-width-md"># Runs</th>
+            <th className="text-right table-width-md">
+              {hasSubtests && data && user.isLoggedIn && (
+                <Button
+                  className="retrigger-btn btn icon-green mr-1 py-0 px-1"
+                  title={compareTableText.retriggerButtonTitle}
+                  onClick={() => this.retriggerJobs(data[0], 5)}
+                >
+                  <FontAwesomeIcon icon={faRedo} />
+                </Button>
+              )}
+              # Runs
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -176,7 +187,7 @@ export default class CompareTable extends React.PureComponent {
                 ) : null}
               </td>
               <td className="text-right">
-                {user.isLoggedIn && (
+                {!hasSubtests && user.isLoggedIn && (
                   <Button
                     className="retrigger-btn btn icon-green mr-1 py-0 px-1"
                     title={compareTableText.retriggerButtonTitle}
@@ -206,12 +217,14 @@ CompareTable.propTypes = {
   testName: PropTypes.string.isRequired,
   user: PropTypes.shape({}).isRequired,
   isBaseAggregate: PropTypes.bool.isRequired,
+  hasSubtests: PropTypes.bool,
   retriggerJob: PropTypes.func,
   getJob: PropTypes.func,
 };
 
 CompareTable.defaultProps = {
   data: null,
+  hasSubtests: false,
   retriggerJob: JobModel.retrigger,
   getJob: JobModel.get,
 };

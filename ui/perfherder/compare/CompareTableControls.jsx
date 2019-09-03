@@ -113,6 +113,7 @@ export default class CompareTableControls extends React.Component {
       user,
       isBaseAggregate,
       notify,
+      hasSubtests,
     } = this.props;
 
     const {
@@ -171,6 +172,7 @@ export default class CompareTableControls extends React.Component {
               user={user}
               isBaseAggregate={isBaseAggregate}
               notify={notify}
+              hasSubtests={hasSubtests}
             />
           ))
         ) : (
@@ -187,6 +189,7 @@ CompareTableControls.propTypes = {
   user: PropTypes.shape({}).isRequired,
   isBaseAggregate: PropTypes.bool.isRequired,
   notify: PropTypes.func.isRequired,
+  hasSubtests: PropTypes.bool,
   validated: PropTypes.shape({
     showOnlyImportant: PropTypes.string,
     showOnlyComparable: PropTypes.string,
@@ -201,6 +204,7 @@ CompareTableControls.propTypes = {
 
 CompareTableControls.defaultProps = {
   dropdownOptions: [],
+  hasSubtests: false,
   validated: {
     showOnlyImportant: undefined,
     showOnlyComparable: undefined,
