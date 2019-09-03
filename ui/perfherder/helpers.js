@@ -186,8 +186,11 @@ export const getCounterMap = function getCounterMap(
     cmap.originalRuns = orig.runs;
     cmap.originalStddev = orig.stddev;
     cmap.originalStddevPct = orig.stddevPct;
+    cmap.originalJobIds = originalData.job_ids;
+    cmap.originalRepoName = originalData.repository_name;
   } else {
     cmap.originalRuns = [];
+    cmap.originalJobIds = [];
   }
 
   if (hasNew) {
@@ -196,8 +199,11 @@ export const getCounterMap = function getCounterMap(
     cmap.newRuns = newd.runs;
     cmap.newStddev = newd.stddev;
     cmap.newStddevPct = newd.stddevPct;
+    cmap.newJobIds = newData.job_ids;
+    cmap.newRepoName = newData.repository_name;
   } else {
     cmap.newRuns = [];
+    cmap.newJobIds = [];
   }
 
   if (!hasOrig || !hasNew) {

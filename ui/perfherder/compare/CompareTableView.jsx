@@ -20,6 +20,11 @@ import {
 } from '../../helpers/url';
 import { getFrameworkData } from '../helpers';
 import TruncatedText from '../../shared/TruncatedText';
+import NotificationList from '../../shared/NotificationList';
+import {
+  clearExpiredTransientNotifications,
+  clearNotificationAtIndex,
+} from '../../helpers/notifications';
 
 import RevisionInformation from './RevisionInformation';
 import CompareTableControls from './CompareTableControls';
@@ -38,11 +43,18 @@ export default class CompareTableView extends React.Component {
       timeRange: this.setTimeRange(),
       framework: getFrameworkData(this.props.validated),
       title: '',
+      notifications: [],
     };
   }
 
   componentDidMount() {
     this.getPerformanceData();
+
+    this.notificationsId = setInterval(() => {
+      const { notifications } = this.state;
+
+      this.setState(clearExpiredTransientNotifications(notifications));
+    }, 4000);
   }
 
   componentDidUpdate(prevProps) {
@@ -154,6 +166,27 @@ export default class CompareTableView extends React.Component {
     this.setState({ timeRange }, () => this.getPerformanceData());
   };
 
+  notify = (message, severity, options = {}) => {
+    const { notifications } = this.state;
+    const notification = {
+      ...options,
+      message,
+      severity: severity || 'info',
+      created: Date.now(),
+    };
+    const newNotifications = [notification, ...notifications];
+
+    this.setState({
+      notifications: newNotifications,
+    });
+  };
+
+  clearNotification = index => {
+    const { notifications } = this.state;
+
+    this.setState(clearNotificationAtIndex(notifications, index));
+  };
+
   render() {
     const {
       originalProject,
@@ -175,6 +208,7 @@ export default class CompareTableView extends React.Component {
       testsNoResults,
       title,
       framework,
+      notifications,
     } = this.state;
 
     const frameworkNames =
@@ -207,6 +241,10 @@ export default class CompareTableView extends React.Component {
 
     return (
       <Container fluid className="max-width-default">
+        <NotificationList
+          notifications={notifications}
+          clearNotification={this.clearNotification}
+        />
         {loading && !failureMessage && (
           <div className="loading">
             <FontAwesomeIcon
@@ -278,6 +316,8 @@ export default class CompareTableView extends React.Component {
                 dropdownOptions={compareDropdowns}
                 updateState={state => this.setState(state)}
                 compareResults={compareResults}
+                isBaseAggregate={!originalRevision}
+                notify={this.notify}
                 showTestsWithNoise={
                   testsWithNoise.length > 0 && (
                     <Row>
@@ -315,6 +355,7 @@ CompareTableView.propTypes = {
     newSignature: PropTypes.string,
     framework: PropTypes.string,
   }),
+  user: PropTypes.shape({}).isRequired,
   dateRangeOptions: PropTypes.oneOfType([PropTypes.shape({}), PropTypes.bool]),
   filterByFramework: PropTypes.oneOfType([PropTypes.shape({}), PropTypes.bool]),
   getDisplayResults: PropTypes.func.isRequired,

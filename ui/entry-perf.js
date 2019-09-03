@@ -45,6 +45,7 @@ import './css/treeherder-global.css';
 import './css/treeherder-navbar.css';
 import './css/perf.css';
 import './css/treeherder-loading-overlay.css';
+import './css/treeherder-notifications.css';
 
 // Bootstrap the Angular modules against which everything will be registered
 import './js/perf';

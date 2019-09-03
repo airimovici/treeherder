@@ -255,6 +255,7 @@ CompareView.propTypes = {
   }),
   $stateParams: PropTypes.shape({}),
   $state: PropTypes.shape({}),
+  user: PropTypes.shape({}).isRequired,
 };
 
 CompareView.defaultProps = {
@@ -273,7 +274,7 @@ const compareView = withValidation(requiredParams)(CompareView);
 
 perf.component(
   'compareView',
-  react2angular(compareView, [], ['$stateParams', '$state']),
+  react2angular(compareView, ['user'], ['$stateParams', '$state']),
 );
 
 export default compareView;

@@ -1,14 +1,17 @@
 import React from 'react';
-import { Table } from 'reactstrap';
+import { Button, Table } from 'reactstrap';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faExclamationTriangle,
+  faRedo,
   faThumbsUp,
 } from '@fortawesome/free-solid-svg-icons';
 
+import JobModel from '../../models/job';
 import SimpleTooltip from '../../shared/SimpleTooltip';
 import { displayNumber } from '../helpers';
+import { compareTableText } from '../constants';
 import ProgressBar from '../ProgressBar';
 
 import TableAverage from './TableAverage';
@@ -28,8 +31,40 @@ export default class CompareTable extends React.PureComponent {
       displayNumber(percentage),
     )}% ${improvement ? 'better' : 'worse'})`;
 
+  retriggerJobs = async (results, times) => {
+    // retrigger base revision jobs
+    this.retriggerByRevision(
+      results.originalJobIds,
+      results.originalRepoName,
+      true,
+      times,
+    );
+    // retrigger new revision jobs
+    this.retriggerByRevision(
+      results.newJobIds,
+      results.newRepoName,
+      false,
+      times,
+    );
+  };
+
+  retriggerByRevision = async (jobIds, repoName, isBaseline, times) => {
+    const { isBaseAggregate, notify, retriggerJob, getJob } = this.props;
+
+    // do not retrigger if the base is aggregate (there is a selected time range)
+    if (isBaseline && isBaseAggregate) {
+      return;
+    }
+
+    if (jobIds.length) {
+      // retrigger only the first job for the revision
+      const job = await getJob(repoName, jobIds[0]);
+      retriggerJob([job], repoName, notify, times);
+    }
+  };
+
   render() {
-    const { data, testName } = this.props;
+    const { data, testName, user } = this.props;
     return (
       <Table sz="small" className="compare-table mb-0 px-0" key={testName}>
         <thead>
@@ -141,6 +176,15 @@ export default class CompareTable extends React.PureComponent {
                 ) : null}
               </td>
               <td className="text-right">
+                {user.isLoggedIn && (
+                  <Button
+                    className="retrigger-btn btn icon-green mr-1 py-0 px-1"
+                    title={compareTableText.retriggerButtonTitle}
+                    onClick={() => this.retriggerJobs(results, 5)}
+                  >
+                    <FontAwesomeIcon icon={faRedo} />
+                  </Button>
+                )}
                 {results.originalRuns && (
                   <SimpleTooltip
                     textClass="detail-hint"
@@ -160,8 +204,14 @@ export default class CompareTable extends React.PureComponent {
 CompareTable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({})),
   testName: PropTypes.string.isRequired,
+  user: PropTypes.shape({}).isRequired,
+  isBaseAggregate: PropTypes.bool.isRequired,
+  retriggerJob: PropTypes.func,
+  getJob: PropTypes.func,
 };
 
 CompareTable.defaultProps = {
   data: null,
+  retriggerJob: JobModel.retrigger,
+  getJob: JobModel.get,
 };

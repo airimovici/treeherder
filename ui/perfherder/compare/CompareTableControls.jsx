@@ -107,7 +107,14 @@ export default class CompareTableControls extends React.Component {
   };
 
   render() {
-    const { showTestsWithNoise, dropdownOptions } = this.props;
+    const {
+      showTestsWithNoise,
+      dropdownOptions,
+      user,
+      isBaseAggregate,
+      notify,
+    } = this.props;
+
     const {
       hideUncomparable,
       hideUncertain,
@@ -157,7 +164,14 @@ export default class CompareTableControls extends React.Component {
 
         {results.size > 0 ? (
           Array.from(results).map(([testName, data]) => (
-            <CompareTable key={testName} data={data} testName={testName} />
+            <CompareTable
+              key={testName}
+              data={data}
+              testName={testName}
+              user={user}
+              isBaseAggregate={isBaseAggregate}
+              notify={notify}
+            />
           ))
         ) : (
           <p className="lead text-center">No results to show</p>
@@ -170,6 +184,9 @@ export default class CompareTableControls extends React.Component {
 CompareTableControls.propTypes = {
   compareResults: PropTypes.shape({}).isRequired,
   dropdownOptions: PropTypes.arrayOf(PropTypes.shape({})),
+  user: PropTypes.shape({}).isRequired,
+  isBaseAggregate: PropTypes.bool.isRequired,
+  notify: PropTypes.func.isRequired,
   validated: PropTypes.shape({
     showOnlyImportant: PropTypes.string,
     showOnlyComparable: PropTypes.string,
