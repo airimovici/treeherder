@@ -123,7 +123,7 @@ default_router.register(r'performance/issue-tracker',
                         base_name='performance-issue-tracker')
 default_router.register(r'performance/validity-dashboard',
                         performance_data.ValidityDashboardViewSet,
-                         base_name='validity-dashboard')
+                        base_name='validity-dashboard')
 default_router.register(r'bugzilla', bugzilla.BugzillaViewSet,
                         base_name='bugzilla')
 default_router.register(r'jobdetail', jobs.JobDetailViewSet,
