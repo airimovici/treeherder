@@ -5,6 +5,7 @@ from collections import defaultdict
 import django_filters
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import (exceptions,
                             filters,
                             generics,
@@ -32,7 +33,9 @@ from .performance_serializers import (IssueTrackerSerializer,
                                       PerformanceBugTemplateSerializer,
                                       PerformanceFrameworkSerializer,
                                       PerformanceQueryParamsSerializer,
-                                      PerformanceSummarySerializer, ValidityDashboardParamsSerializer)
+                                      PerformanceSummarySerializer,
+                                      ValidityDashboardParamsSerializer)
+from .utils import GroupConcat
 
 
 class PerformanceSignatureViewSet(viewsets.ViewSet):
@@ -493,21 +496,6 @@ class PerformanceSummary(generics.ListAPIView):
         serializer = self.get_serializer(self.queryset, many=True)
         return Response(data=serializer.data)
 
-from django.db.models import Aggregate, CharField, Count
-
-
-class GroupConcat(Aggregate):
-    function = 'GROUP_CONCAT'
-    template = '%(function)s(%(distinct)s%(expressions)s)'
-    allow_distinct = True
-
-    def __init__(self, expression, distinct=False, **extra):
-        super().__init__(
-            expression,
-            distinct='DISTINCT ' if distinct else '',
-            output_field=CharField(),
-            **extra)
-
 
 class ValidityDashboardViewSet(viewsets.ViewSet):
 
@@ -520,13 +508,13 @@ class ValidityDashboardViewSet(viewsets.ViewSet):
         framework_id = query_params.validated_data['framework']
 
         query_set_one = (PerformanceSignature.objects
-                     .prefetch_related('performancealert')
-                     .values('suite', 'test')
-                     .annotate(repositories=GroupConcat('repository_id', distinct=True))
-                     .annotate(platforms=GroupConcat('platform_id', distinct=True))
-                     .annotate(total_alerts=Count('performancealert'))
-                     .filter(framework_id=framework_id)
-                     .order_by('suite', 'test'))
+                         .prefetch_related('performancealert')
+                         .values('suite', 'test')
+                         .annotate(repositories=GroupConcat('repository_id', distinct=True))
+                         .annotate(platforms=GroupConcat('platform_id', distinct=True))
+                         .annotate(total_alerts=Count('performancealert'))
+                         .filter(framework_id=framework_id)
+                         .order_by('suite', 'test'))
 
         # change in place
         aggregated_signature_data = list(query_set_one)
