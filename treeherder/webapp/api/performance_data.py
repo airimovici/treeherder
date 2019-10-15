@@ -506,24 +506,24 @@ class ValidityDashboardViewSet(viewsets.ViewSet):
                             status=HTTP_400_BAD_REQUEST)
 
         framework_id = query_params.validated_data['framework']
+        query_set = (PerformanceSignature.objects
+                     .prefetch_related('performancealert')
+                     .filter(framework_id=framework_id)
+                     .values('suite', 'test')
+                     .annotate(repositories=GroupConcat('repository_id', distinct=True))
+                     .annotate(platforms=GroupConcat('platform_id', distinct=True))
+                     .annotate(total_alerts=Count('performancealert'))
+                     .order_by('suite', 'test'))
+        return Response(self.__aggregate_signature_data(query_set))
 
-        query_set_one = (PerformanceSignature.objects
-                         .prefetch_related('performancealert')
-                         .values('suite', 'test')
-                         .annotate(repositories=GroupConcat('repository_id', distinct=True))
-                         .annotate(platforms=GroupConcat('platform_id', distinct=True))
-                         .annotate(total_alerts=Count('performancealert'))
-                         .filter(framework_id=framework_id)
-                         .order_by('suite', 'test'))
-
+    def __aggregate_signature_data(self, query_set):
         # change in place
-        aggregated_signature_data = list(query_set_one)
-        # data_two = list(query_set_two)
+        aggregated_signature_data = list(query_set)
+
         for item in aggregated_signature_data:
             item['repositories'] = self.__list_form(item['repositories'])
             item['platforms'] = self.__list_form(item['platforms'])
-
-        return Response(aggregated_signature_data)
+        return aggregated_signature_data
 
     def __list_form(self, comma_strings):
         return comma_strings.split(',')
