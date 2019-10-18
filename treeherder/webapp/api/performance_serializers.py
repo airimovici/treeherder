@@ -254,5 +254,18 @@ class PerformanceSummarySerializer(serializers.ModelSerializer):
                                  value['extra_options'])
 
 
-class ValidityDashboardParamsSerializer(serializers.Serializer):
+class TestSuiteHealthParamsSerializer(serializers.Serializer):
     framework = serializers.CharField(default=None)
+
+
+class CommaSeparatedField(serializers.Field):
+    def to_representation(self, value):
+        return value.split(',')
+
+
+class TestSuiteHealthSerializer(serializers.Serializer):
+    test = serializers.CharField()
+    suite = serializers.CharField()
+    platforms = CommaSeparatedField()
+    repositories = CommaSeparatedField()
+    total_alerts = serializers.IntegerField()

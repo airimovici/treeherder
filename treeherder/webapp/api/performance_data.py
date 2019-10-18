@@ -34,7 +34,8 @@ from .performance_serializers import (IssueTrackerSerializer,
                                       PerformanceFrameworkSerializer,
                                       PerformanceQueryParamsSerializer,
                                       PerformanceSummarySerializer,
-                                      ValidityDashboardParamsSerializer)
+                                      TestSuiteHealthParamsSerializer,
+                                      TestSuiteHealthSerializer)
 from .utils import GroupConcat
 
 
@@ -497,10 +498,10 @@ class PerformanceSummary(generics.ListAPIView):
         return Response(data=serializer.data)
 
 
-class ValidityDashboardViewSet(viewsets.ViewSet):
+class TestSuiteHealthViewSet(viewsets.ViewSet):
 
     def list(self, request):
-        query_params = ValidityDashboardParamsSerializer(data=request.query_params)
+        query_params = TestSuiteHealthParamsSerializer(data=request.query_params)
         if not query_params.is_valid():
             return Response(data=query_params.errors,
                             status=HTTP_400_BAD_REQUEST)
@@ -508,22 +509,13 @@ class ValidityDashboardViewSet(viewsets.ViewSet):
         framework_id = query_params.validated_data['framework']
         query_set = (PerformanceSignature.objects
                      .prefetch_related('performancealert')
-                     .filter(framework_id=framework_id)
+                     .filter(framework_id=framework_id, parent_signature_id=None)
                      .values('suite', 'test')
                      .annotate(repositories=GroupConcat('repository_id', distinct=True))
                      .annotate(platforms=GroupConcat('platform_id', distinct=True))
                      .annotate(total_alerts=Count('performancealert'))
                      .order_by('suite', 'test'))
-        return Response(self.__aggregate_signature_data(query_set))
 
-    def __aggregate_signature_data(self, query_set):
-        # change in place
-        aggregated_signature_data = list(query_set)
+        serializer = TestSuiteHealthSerializer(query_set, many=True)
+        return Response(data=serializer.data)
 
-        for item in aggregated_signature_data:
-            item['repositories'] = self.__list_form(item['repositories'])
-            item['platforms'] = self.__list_form(item['platforms'])
-        return aggregated_signature_data
-
-    def __list_form(self, comma_strings):
-        return comma_strings.split(',')
