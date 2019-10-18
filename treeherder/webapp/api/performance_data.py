@@ -518,4 +518,3 @@ class TestSuiteHealthViewSet(viewsets.ViewSet):
 
         serializer = TestSuiteHealthSerializer(query_set, many=True)
         return Response(data=serializer.data)
-
