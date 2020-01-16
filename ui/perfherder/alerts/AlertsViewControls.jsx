@@ -17,7 +17,6 @@ export default class AlertsViewControls extends React.Component {
         this.validated,
         'hideAssignedToOthers',
       ),
-      filterText: '',
     };
   }
 
@@ -51,20 +50,38 @@ export default class AlertsViewControls extends React.Component {
     );
   };
 
-  render() {
-    const {
-      alertSummaries,
-      dropdownOptions,
-      fetchAlertSummaries,
-      user,
-    } = this.props;
+  getClientSideFilters = () => {
+    const { filterText } = this.props;
     const {
       hideImprovements,
       hideDownstream,
       hideAssignedToOthers,
     } = this.state;
 
-    const alertFilters = [
+    return {
+      filterText,
+      hideImprovements,
+      hideDownstream,
+      hideAssignedToOthers,
+    };
+  };
+
+  render() {
+    const {
+      alertSummaries,
+      dropdownOptions,
+      updateFilterText,
+      fetchAlertSummaries,
+      user,
+    } = this.props;
+    const clientSideFilters = this.getClientSideFilters();
+    const {
+      hideImprovements,
+      hideDownstream,
+      hideAssignedToOthers,
+    } = clientSideFilters;
+
+    const alertCheckboxes = [
       {
         text: 'Hide improvements',
         state: hideImprovements,
@@ -78,7 +95,7 @@ export default class AlertsViewControls extends React.Component {
     ];
 
     if (user.isLoggedIn) {
-      alertFilters.push({
+      alertCheckboxes.push({
         text: 'My alerts',
         state: hideAssignedToOthers,
         stateName: 'hideAssignedToOthers',
@@ -89,20 +106,20 @@ export default class AlertsViewControls extends React.Component {
       <React.Fragment>
         <FilterControls
           dropdownOptions={dropdownOptions}
-          filterOptions={alertFilters}
+          filterOptions={alertCheckboxes}
           updateFilter={this.updateFilter}
-          updateFilterText={filterText => this.setState({ filterText })}
+          updateFilterText={updateFilterText}
           dropdownCol
         />
         {alertSummaries.length > 0 &&
           alertSummaries.map(alertSummary => (
             <AlertTable
-              filters={this.state}
+              filters={clientSideFilters}
               key={alertSummary.id}
               alertSummary={alertSummary}
               fetchAlertSummaries={fetchAlertSummaries}
-              {...this.props}
               user={user}
+              {...this.props}
             />
           ))}
       </React.Fragment>
@@ -115,6 +132,8 @@ AlertsViewControls.propTypes = {
     updateParams: PropTypes.func,
   }).isRequired,
   dropdownOptions: PropTypes.arrayOf(PropTypes.shape({})),
+  filterText: PropTypes.string.isRequired,
+  updateFilterText: PropTypes.func.isRequired,
   fetchAlertSummaries: PropTypes.func.isRequired,
   alertSummaries: PropTypes.arrayOf(PropTypes.shape({})),
   user: PropTypes.shape({}).isRequired,

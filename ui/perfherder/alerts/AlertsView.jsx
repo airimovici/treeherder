@@ -37,6 +37,7 @@ class AlertsView extends React.Component {
     this.state = {
       status: this.getDefaultStatus(),
       framework: getFrameworkData(this.props),
+      filterText: '',
       page: this.validated.page ? parseInt(this.validated.page, 10) : 1,
       errorMessages: [],
       alertSummaries: [],
@@ -83,6 +84,12 @@ class AlertsView extends React.Component {
     return getStatus(parseInt(validated.status, 10));
   };
 
+  updateStatus = status => {
+    const statusId = summaryStatusMap[status];
+    this.props.validated.updateParams({ status: statusId });
+    this.setState({ status }, () => this.fetchAlertSummaries());
+  };
+
   updateFramework = selection => {
     const { updateParams } = this.props.validated;
     const { frameworks } = this.props;
@@ -94,10 +101,8 @@ class AlertsView extends React.Component {
     );
   };
 
-  updateStatus = status => {
-    const statusId = summaryStatusMap[status];
-    this.props.validated.updateParams({ status: statusId });
-    this.setState({ status }, () => this.fetchAlertSummaries());
+  updateFilterText = filterText => {
+    this.setState({ filterText }, () => this.fetchAlertSummaries());
   };
 
   navigatePage = page => {
@@ -126,8 +131,9 @@ class AlertsView extends React.Component {
     this.setState({ loading: !update, errorMessages: [] });
 
     const {
-      framework,
       status,
+      framework,
+      filterText,
       errorMessages,
       issueTrackers,
       optionCollectionMap,
@@ -151,6 +157,10 @@ class AlertsView extends React.Component {
     if (!id && summaryStatusMap[status] !== -1) {
       // -1 ('all') is created for UI purposes but is not a valid API parameter
       params.status = summaryStatusMap[status];
+    }
+
+    if (!id && filterText !== '') {
+      params.filter_text = filterText;
     }
 
     const url = getApiUrl(
@@ -201,8 +211,9 @@ class AlertsView extends React.Component {
   render() {
     const { user, frameworks } = this.props;
     const {
-      framework,
       status,
+      framework,
+      filterText,
       errorMessages,
       loading,
       alertSummaries,
@@ -255,6 +266,8 @@ class AlertsView extends React.Component {
           )}
           <AlertsViewControls
             dropdownOptions={id ? [] : alertDropdowns}
+            filterText={filterText}
+            updateFilterText={this.updateFilterText}
             alertSummaries={alertSummaries}
             issueTrackers={issueTrackers}
             optionCollectionMap={optionCollectionMap}

@@ -5,7 +5,9 @@ from collections import defaultdict
 import django_filters
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import (CharField,
+                              Count)
+from django.db.models.functions import Concat
 from rest_framework import (exceptions,
                             filters,
                             generics,
@@ -267,6 +269,43 @@ class AlertSummaryPagination(pagination.PageNumberPagination):
     page_size = 10
 
 
+class PerformanceAlertSummaryFilter(django_filters.FilterSet):
+    id = django_filters.NumberFilter(field_name='id')
+    status = django_filters.NumberFilter(field_name='status')
+    framework = django_filters.NumberFilter(field_name='framework')
+    repository = django_filters.NumberFilter(field_name='repository')
+    alerts__series_signature = django_filters.NumberFilter(field_name='alerts__series_signature')
+    filter_text = django_filters.CharFilter(method='text_to_filter')
+
+    def text_to_filter(self, queryset, name, value):
+        contains_all_words = self._build_all_words_pattern(value)
+
+        return (queryset
+                .annotate(full_name=Concat(
+                    'alerts__series_signature__suite',
+                    'alerts__series_signature__test',
+                    'alerts__series_signature__platform__platform',
+                    'alerts__series_signature__extra_options',
+                    'bug_number',
+                    'push__revision',
+                    output_field=CharField()))
+                .filter(full_name__regex=contains_all_words))
+
+    def _build_all_words_pattern(self, text: str) -> str:
+        words = text.split(' ')
+        return ''.join(map(self._word_is_contained, words))
+
+    @staticmethod
+    def _word_is_contained(word: str) -> str:
+        return f'(.*{word})'
+
+    class Meta:
+        model = PerformanceAlertSummary
+        fields = ['id', 'status', 'framework', 'repository',
+                  'alerts__series_signature',
+                  'filter_text']
+
+
 class PerformanceAlertSummaryViewSet(viewsets.ModelViewSet):
     """ViewSet for the performance alert summary model"""
     queryset = PerformanceAlertSummary.objects.filter(
@@ -282,9 +321,8 @@ class PerformanceAlertSummaryViewSet(viewsets.ModelViewSet):
 
     serializer_class = PerformanceAlertSummarySerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.OrderingFilter)
-    filterset_fields = ['id', 'status', 'framework', 'repository',
-                        'alerts__series_signature',
-                        'alerts__series_signature__signature_hash']
+    filterset_class = PerformanceAlertSummaryFilter
+
     ordering = ('-created', '-id')
     pagination_class = AlertSummaryPagination
 
