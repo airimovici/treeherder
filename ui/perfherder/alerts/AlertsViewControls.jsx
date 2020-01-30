@@ -72,6 +72,7 @@ export default class AlertsViewControls extends React.Component {
       dropdownOptions,
       updateFilterText,
       fetchAlertSummaries,
+      isDetailMode,
       user,
     } = this.props;
     const clientSideFilters = this.getClientSideFilters();
@@ -109,6 +110,7 @@ export default class AlertsViewControls extends React.Component {
           filterOptions={alertCheckboxes}
           updateFilter={this.updateFilter}
           updateFilterText={updateFilterText}
+          isDetailMode={isDetailMode}
           dropdownCol
         />
         {alertSummaries.length > 0 &&
@@ -132,6 +134,7 @@ AlertsViewControls.propTypes = {
     updateParams: PropTypes.func,
   }).isRequired,
   dropdownOptions: PropTypes.arrayOf(PropTypes.shape({})),
+  isDetailMode: PropTypes.bool.isRequired,
   filterText: PropTypes.string.isRequired,
   updateFilterText: PropTypes.func.isRequired,
   fetchAlertSummaries: PropTypes.func.isRequired,

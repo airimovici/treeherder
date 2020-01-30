@@ -41,6 +41,7 @@ const FilterControls = ({
   filterOptions,
   updateFilterText,
   updateFilter,
+  isDetailMode,
   dropdownCol,
 }) => {
   const createButton = filter => (
@@ -67,7 +68,7 @@ const FilterControls = ({
           createDropdowns(dropdownOptions, 'py-2 pl-0 pr-3')}
 
         <Col className="col-2 py-2 pl-0 pr-2">
-          <InputFilter updateFilterText={updateFilterText} />
+          <InputFilter updateFilterText={updateFilterText} updateOnEnter={!isDetailMode} />
         </Col>
 
         {filterOptions.length > 0 &&
@@ -93,6 +94,7 @@ FilterControls.propTypes = {
   filterOptions: PropTypes.arrayOf(PropTypes.shape({})),
   updateFilter: PropTypes.func,
   updateFilterText: PropTypes.func.isRequired,
+  isDetailMode: PropTypes.bool.isRequired,
   dropdownCol: PropTypes.bool,
 };
 

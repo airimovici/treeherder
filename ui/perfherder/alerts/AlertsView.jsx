@@ -37,7 +37,7 @@ class AlertsView extends React.Component {
     this.state = {
       status: this.getDefaultStatus(),
       framework: getFrameworkData(this.props),
-      filterText: '',
+      filterText: this.getDefaultFilterText(),
       page: this.validated.page ? parseInt(this.validated.page, 10) : 1,
       errorMessages: [],
       alertSummaries: [],
@@ -74,6 +74,10 @@ class AlertsView extends React.Component {
     }
   }
 
+  isDetailMode = () => {
+    return Boolean(this.state.id);
+  };
+
   getDefaultStatus = () => {
     const { validated } = this.props;
 
@@ -82,6 +86,11 @@ class AlertsView extends React.Component {
       return Object.keys(summaryStatusMap)[1];
     }
     return getStatus(parseInt(validated.status, 10));
+  };
+
+  getDefaultFilterText = () => {
+    const { filterText } = this.props.validated;
+    return filterText === undefined || filterText === null ? '' : filterText;
   };
 
   updateStatus = status => {
@@ -102,7 +111,24 @@ class AlertsView extends React.Component {
   };
 
   updateFilterText = filterText => {
-    this.setState({ filterText }, () => this.fetchAlertSummaries());
+    if (this.isDetailMode()) {
+      this.setState({ filterText });
+    } else {
+      const { updateParams } = this.props.validated;
+      if (filterText === '') {
+        updateParams({ filterText: undefined });
+      } else {
+        updateParams({ filterText });
+      }
+
+      this.setState({ filterText }, () => {
+        console.log(
+          'fetchAlertSummaries after filter text update: ',
+          filterText,
+        );
+        this.fetchAlertSummaries();
+      });
+    }
   };
 
   navigatePage = page => {
@@ -159,7 +185,9 @@ class AlertsView extends React.Component {
       params.status = summaryStatusMap[status];
     }
 
+    console.log('Inside fetchAlertSummaries....');
     if (!id && filterText !== '') {
+      console.log('...parms.filter_text will be...', filterText);
       params.filter_text = filterText;
     }
 
@@ -222,7 +250,6 @@ class AlertsView extends React.Component {
       page,
       count,
       bugTemplate,
-      id,
     } = this.state;
 
     const frameworkNames =
@@ -265,7 +292,8 @@ class AlertsView extends React.Component {
             </Alert>
           )}
           <AlertsViewControls
-            dropdownOptions={id ? [] : alertDropdowns}
+            dropdownOptions={this.isDetailMode() ? [] : alertDropdowns}
+            isDetailMode={this.isDetailMode()}
             filterText={filterText}
             updateFilterText={this.updateFilterText}
             alertSummaries={alertSummaries}
