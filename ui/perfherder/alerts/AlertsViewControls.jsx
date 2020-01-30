@@ -95,7 +95,7 @@ export default class AlertsViewControls extends React.Component {
       },
     ];
 
-    if (user.isLoggedIn) {
+    if (user.isLoggedIn && !isDetailMode) {
       alertCheckboxes.push({
         text: 'My alerts',
         state: hideAssignedToOthers,
@@ -133,6 +133,7 @@ AlertsViewControls.propTypes = {
   validated: PropTypes.shape({
     updateParams: PropTypes.func,
   }).isRequired,
+  isListingAlertSummaries: PropTypes.bool,
   dropdownOptions: PropTypes.arrayOf(PropTypes.shape({})),
   isDetailMode: PropTypes.bool.isRequired,
   filterText: PropTypes.string.isRequired,
@@ -143,6 +144,7 @@ AlertsViewControls.propTypes = {
 };
 
 AlertsViewControls.defaultProps = {
+  isListingAlertSummaries: null,
   dropdownOptions: null,
   alertSummaries: [],
 };
